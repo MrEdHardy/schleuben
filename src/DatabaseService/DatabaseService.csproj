@@ -11,6 +11,7 @@
 	<DebugType>embedded</DebugType>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<RootNamespace>DatabaseService</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
