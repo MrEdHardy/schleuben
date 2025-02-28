@@ -27,7 +27,7 @@ public class PersonController(
     /// </returns>
     /// <response code="200">Returns the JSON string of all persons.</response>
     /// <response code="500">If an error occurs while accessing the database.</response>
-    [HttpGet("GetAllPersons")]
+    [HttpGet]
     public async Task<IActionResult> GetAllPersons()
     {
         return this.Ok(await dataService.GetPeopleAsync(this.HttpContext.RequestAborted));
@@ -90,7 +90,14 @@ public class PersonController(
     [HttpPut("CreatePerson")]
     public async Task<IActionResult> CreatePerson([FromBody] PersonEntity person)
     {
-        return this.Ok(await dataService.CreatePersonAsync(person, this.HttpContext.RequestAborted));
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
+        var result = await dataService.CreatePersonAsync(person, this.HttpContext.RequestAborted);
+
+        return this.CreatedAtAction(nameof(CreatePerson), result);
     }
 
     /// <summary>

@@ -80,8 +80,9 @@ public class Program
         // Add database service
         builder.Services.AddSingleton<IDatabaseService, FluentMigratorService>();
 
-        // Add person data service
+        // Add data services
         builder.Services.AddScoped<IPersonDataService, PersonDataService>();
+        builder.Services.AddScoped<IAddressDataService, AddressDataService>();
 
         // Add environment and file system
         var systemEnvironment = SystemEnvironmentProvider.Instance;

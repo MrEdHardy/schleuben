@@ -1,10 +1,6 @@
 @url = https://127.0.0.1:65535/
 
-GET {{url}}persons/gethallo
-
-###
-
-GET {{url}}persons/getallpersons
+GET {{url}}persons/
 
 ###
 
@@ -94,8 +90,8 @@ Content-Type: application/json
     "BirthDate": "2070-01-01",
     "TelephoneConnections": [
         {
-            "PhoneNumber": "420420",
-            "PersonId": "{{id}}"
+            "Id": 3,
+            "PhoneNumber": "420420"
         }
     ]
 }
