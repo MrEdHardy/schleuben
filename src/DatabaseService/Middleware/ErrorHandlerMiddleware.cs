@@ -35,6 +35,7 @@ public sealed partial class ErrorHandlerMiddleware(
             }));
         }
     }
+
     [LoggerMessage(LogLevel.Error, "An unhandled exception has occurred.")]
     private static partial void LogError(ILogger logger, Exception e);
 }
