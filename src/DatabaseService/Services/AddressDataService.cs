@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DatabaseService.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Database;
 using Shared.Infrastructure.Database.Entities;
 
@@ -11,27 +12,18 @@ namespace DatabaseService.Services;
 public sealed class AddressDataService(DatabaseContext dbContext) : IAddressDataService
 {
     /// <inheritdoc/>
-    public async Task<AddressEntity> CreateAddressAsync(AddressEntity address, CancellationToken cancellationToken)
+    public Task<AddressEntity> CreateAddressAsync(AddressEntity address, CancellationToken cancellationToken)
     {
-        dbContext.Add(address);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return address;
+        return dbContext.CreateEntity(address, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task DeleteAddressAsync(uint id, CancellationToken cancellationToken)
+    public async Task DeleteAddressAsync(uint id, CancellationToken cancellationToken)
     {
-        var address = this.GetBaseAddressQuery()
+        var address = await this.GetBaseAddressQuery()
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
-        if (address is not null)
-        {
-            dbContext.Remove(address);
-        }
-
-        return dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.DeleteEntity(address, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -52,9 +44,7 @@ public sealed class AddressDataService(DatabaseContext dbContext) : IAddressData
         var oldRecord = await this.GetBaseAddressQuery()
             .FirstAsync(a => a.Id == address.Id, cancellationToken);
 
-        dbContext.Update(address);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.UpdateEntity(address, cancellationToken);
     }
 
     private IQueryable<AddressEntity> GetBaseAddressQuery()

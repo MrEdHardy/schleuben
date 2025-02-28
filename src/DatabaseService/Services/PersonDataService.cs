@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DatabaseService.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Database;
 using Shared.Infrastructure.Database.Entities;
 
@@ -11,13 +12,9 @@ namespace DatabaseService.Services;
 public sealed class PersonDataService(DatabaseContext dbContext) : IPersonDataService
 {
     /// <inheritdoc/>
-    public async Task<PersonEntity> CreatePersonAsync(PersonEntity person, CancellationToken cancellationToken)
+    public Task<PersonEntity> CreatePersonAsync(PersonEntity person, CancellationToken cancellationToken)
     {
-        dbContext.Add(person);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return person;
+        return dbContext.CreateEntity(person, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -26,11 +23,7 @@ public sealed class PersonDataService(DatabaseContext dbContext) : IPersonDataSe
         var entity = await this.GetBasePersonQuery()
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
-        if (entity is not null)
-        {
-            dbContext.Remove(entity);
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
+        await dbContext.DeleteEntity(entity, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -51,11 +44,9 @@ public sealed class PersonDataService(DatabaseContext dbContext) : IPersonDataSe
     public async Task UpdatePersonAsync(PersonEntity person, CancellationToken cancellationToken)
     {
         var oldRecord = await this.GetBasePersonQuery()
-            .FirstAsync(p => p.Id == person.Id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == person.Id, cancellationToken);
 
-        dbContext.Update(person);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.UpdateEntity(person, cancellationToken);
     }
 
     private IQueryable<PersonEntity> GetBasePersonQuery()

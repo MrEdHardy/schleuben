@@ -1,4 +1,5 @@
-﻿using DatabaseService.Services;
+﻿using DatabaseService.Extensions;
+using DatabaseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
 
@@ -33,13 +34,11 @@ public sealed class AddressController(
     [HttpGet("GetAddressById/{id}")]
     public async Task<IActionResult> GetAddressById(uint id)
     {
-        if (id < 1)
+        var idHandleResult = this.HandleId(logger, id);
+
+        if (idHandleResult is not null)
         {
-            const string reason = "Invalid id was provided!";
-
-            logger.LogWarning(reason);
-
-            return this.BadRequest(reason);
+            return idHandleResult;
         }
 
         var result = await dataService.GetAddressByIdAsync(id, this.HttpContext.RequestAborted);
@@ -59,7 +58,7 @@ public sealed class AddressController(
     {
         var result = await dataService.CreateAddressAsync(address, this.HttpContext.RequestAborted);
 
-        return this.CreatedAtAction(nameof(CreateAddress), new { id = result.Id }, result);
+        return this.CreatedAtAction(nameof(CreateAddress), new { result.Id }, result);
     }
 
     /// <summary>
@@ -83,6 +82,13 @@ public sealed class AddressController(
     [HttpDelete("DeleteAddress/{id}")]
     public async Task<IActionResult> DeleteAddress(uint id)
     {
+        var idHandleResult = this.HandleId(logger, id);
+
+        if (idHandleResult is not null)
+        {
+            return idHandleResult;
+        }
+
         await dataService.DeleteAddressAsync(id, this.HttpContext.RequestAborted);
 
         return this.NoContent();

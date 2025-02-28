@@ -1,4 +1,5 @@
-﻿using DatabaseService.Services;
+﻿using DatabaseService.Extensions;
+using DatabaseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
 
@@ -48,13 +49,11 @@ public class PersonController(
     [HttpGet("GetPersonById/{id}")]
     public async Task<IActionResult> GetPersonById(uint id)
     {
-        if (id < 1)
+        var idHandleResult = this.HandleId(logger, id);
+
+        if (idHandleResult is not null)
         {
-            const string reason = "Invalid id was provided!";
-
-            logger.LogWarning(reason);
-
-            return this.BadRequest(reason);
+            return idHandleResult;
         }
 
         var result = await dataService.GetPersonByIdAsync(id, this.HttpContext.RequestAborted);
@@ -97,7 +96,7 @@ public class PersonController(
 
         var result = await dataService.CreatePersonAsync(person, this.HttpContext.RequestAborted);
 
-        return this.CreatedAtAction(nameof(CreatePerson), result);
+        return this.CreatedAtAction(nameof(GetPersonById), new { result.Id }, result);
     }
 
     /// <summary>
@@ -108,6 +107,13 @@ public class PersonController(
     [HttpDelete("DeletePerson/{id}")]
     public async Task<IActionResult> DeletePerson(uint id)
     {
+        var idHandleResult = this.HandleId(logger, id);
+
+        if (idHandleResult is not null)
+        {
+            return idHandleResult;
+        }
+
         await dataService.DeletePersonAsync(id, this.HttpContext.RequestAborted);
 
         return this.NoContent();

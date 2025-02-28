@@ -83,6 +83,7 @@ public class Program
         // Add data services
         builder.Services.AddScoped<IPersonDataService, PersonDataService>();
         builder.Services.AddScoped<IAddressDataService, AddressDataService>();
+        builder.Services.AddScoped<ITelephoneConnectionDataService, TelephoneConnectionDataService>();
 
         // Add environment and file system
         var systemEnvironment = SystemEnvironmentProvider.Instance;
