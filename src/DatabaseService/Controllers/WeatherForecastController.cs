@@ -1,7 +1,6 @@
-using DatabaseService;
 using Microsoft.AspNetCore.Mvc;
 
-namespace schleuben.Controllers;
+namespace DatabaseService.Controllers;
 
 [ApiController]
 [Route("[controller]")]

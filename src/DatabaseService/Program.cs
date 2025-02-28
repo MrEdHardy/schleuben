@@ -1,13 +1,13 @@
-
 using FluentMigrator.Runner;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Shared.Infrastructure.Configuration.Json;
 using Shared.Infrastructure.Database;
 using Shared.Infrastructure.Database.Migrations;
 using Shared.Infrastructure.Database.Services;
 using System.IO.Abstractions;
 
-namespace schleuben;
+namespace DatabaseService;
 
 /// <summary>
 /// Represents the entry point of the application.
@@ -46,8 +46,14 @@ public class Program
             fileInfoDbFile.Directory?.Create();
         }
 
+        // Json serializer options
+        builder.Services.Configure<JsonSettings>(
+            builder.Configuration.GetSection("JsonSettings"));
+
+        builder.Services.AddSingleton<JsonSerializerOptionsProvider>();
+
         // Add db context
-        builder.Services.AddDbContext<DatabaseContext>(options =>
+        builder.Services.AddDbContextFactory<DatabaseContext>(options =>
         {
             options.UseSqlite(sqliteConnectionString.ToString());
         });
@@ -96,9 +102,8 @@ public class Program
         app.MapControllers();
 
         var dbService = app.Services.GetRequiredService<IDatabaseService>();
-
         await dbService.MigrateUp(cts.Token);
 
-        app.Run();
+        await app.RunAsync(cts.Token);
     }
 }
