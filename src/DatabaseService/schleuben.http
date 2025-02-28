@@ -13,3 +13,92 @@ GET {{url}}persons/getpersonbyid/1
 ###
 
 GET {{url}}persons/getpersonbyid/0
+
+###
+
+PATCH {{url}}persons/updateperson
+Content-Type: application/json
+
+{
+  "$id": "1",
+  "Id": 1,
+  "FirstName": "Max",
+  "LastName": "Mustermann",
+  "BirthDate": "1999-01-01",
+  "TelephoneConnections": {
+    "$id": "2",
+    "$values": [
+      {
+        "$id": "3",
+        "Id": 1,
+        "PhoneNumber": "0123456789133742069",
+        "PersonId": 1,
+        "Person": {
+          "$ref": "1"
+        }
+      }
+    ]
+  },
+  "Addresses": {
+    "$id": "4",
+    "$values": [
+      {
+        "$id": "5",
+        "Id": 1,
+        "Street": "Musterstra\u00DFe",
+        "HouseNumber": "1",
+        "City": "Musterstadt",
+        "ZipCode": "12345",
+        "AdditionalInfo": null,
+        "PersonId": 1,
+        "Person": {
+          "$ref": "1"
+        }
+      }
+    ]
+  }
+}
+
+###
+
+PATCH {{url}}persons/updateperson
+Content-Type: application/json
+
+{
+
+}
+
+### Create new person
+# @name postCreate
+PUT {{url}}persons/createperson
+Content-Type: application/json
+
+{
+    "FirstName" : "Test",
+    "LastName": "User",
+    "BirthDate": "1970-01-01"
+}
+
+###
+
+@id = {{postCreate.response.body.id}}
+
+### Update new person
+PATCH {{url}}persons/updateperson
+Content-Type: application/json
+
+{
+    "Id": "{{id}}",
+    "FirstName" : "Test",
+    "LastName": "User",
+    "BirthDate": "2070-01-01",
+    "TelephoneConnections": [
+        {
+            "PhoneNumber": "420420",
+            "PersonId": "{{id}}"
+        }
+    ]
+}
+
+### Delete newly created person
+DELETE {{url}}persons/deleteperson/{{id}} HTTP/1.1

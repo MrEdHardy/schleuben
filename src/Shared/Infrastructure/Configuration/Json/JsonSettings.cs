@@ -11,7 +11,7 @@ public sealed class JsonSettings
     /// <value>
     /// <c>true</c> if the JSON output should be indented; otherwise, <c>false</c>.
     /// </value>
-    public bool WriteIndented { get; set; }
+    public bool WriteIndented { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the type of reference handling to be used during JSON serialization and deserialization.
@@ -39,5 +39,5 @@ public sealed class JsonSettings
     /// </item>
     /// </list>
     /// </remarks>
-    public ReferenceHandlerType ReferenceHandler { get; set; }
+    public ReferenceHandlerType ReferenceHandler { get; set; } = ReferenceHandlerType.Preserve;
 }

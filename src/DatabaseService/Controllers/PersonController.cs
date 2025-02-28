@@ -1,37 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Shared.Infrastructure.Configuration.Json;
-using Shared.Infrastructure.Database;
+﻿using DatabaseService.Services;
+using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
-using System.Text.Json;
 
 namespace DatabaseService.Controllers;
 
 /// <summary>
 /// Person controller
 /// </summary>
-/// <param name="dbContextFactory"></param>
 /// <param name="logger"></param>
+/// <param name="dataService"></param>
 [ApiController]
 [Route("persons")]
 public class PersonController(
-    IDbContextFactory<DatabaseContext> dbContextFactory,
     ILogger<PersonController> logger,
-    CancellationTokenSource source,
-    JsonSerializerOptionsProvider settingsProvider) : ControllerBase
+    IPersonDataService dataService) : ControllerBase
 {
-    private readonly CancellationToken cancellationToken = source.Token;
-
-    /// <summary>
-    /// Test action
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet("GetHallo")]
-    public string GetHallo()
-    {
-        return "Hallo du Penner";
-    }
-
     /// <summary>
     /// Retrieves all persons from the database.
     /// </summary>
@@ -45,14 +28,9 @@ public class PersonController(
     /// <response code="200">Returns the JSON string of all persons.</response>
     /// <response code="500">If an error occurs while accessing the database.</response>
     [HttpGet("GetAllPersons")]
-    public async Task<string> GetAllPersons()
+    public async Task<IActionResult> GetAllPersons()
     {
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(this.cancellationToken);
-
-        var allPeople = await GetBasePersonQuery(dbContext)
-            .ToArrayAsync(this.cancellationToken);
-
-        return JsonSerializer.Serialize(allPeople, settingsProvider.GetOptions());
+        return this.Ok(await dataService.GetPeopleAsync(this.HttpContext.RequestAborted));
     }
 
     /// <summary>
@@ -74,38 +52,57 @@ public class PersonController(
         {
             const string reason = "Invalid id was provided!";
 
-            logger.LogWarning("Invalid id was provided!");
+            logger.LogWarning(reason);
 
             return this.BadRequest(reason);
         }
 
-        try
-        {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(this.cancellationToken);
+        var result = await dataService.GetPersonByIdAsync(id, this.HttpContext.RequestAborted);
 
-            var result = await GetBasePersonQuery(dbContext)
-                .FirstOrDefaultAsync(p => p.Id == id, this.cancellationToken);
-
-            return result is not null
-                ? this.Ok(JsonSerializer.Serialize(result, settingsProvider.GetOptions()))
-                : this.NotFound($"No person with given id {id} was found!");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "An error occurred while accessing the database.");
-
-            return this.StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "An error occured while processing the request");
-        }
+        return result is not null
+            ? this.Ok(result)
+            : this.NotFound($"No person with given id {id} was found!");
     }
 
-    private static IQueryable<PersonEntity> GetBasePersonQuery(DatabaseContext dbContext)
+    /// <summary>
+    /// Updates a person in the database.
+    /// </summary>
+    /// <param name="person">Person to be updated</param>
+    /// <returns>No content if it succeeds</returns>
+    [HttpPatch("UpdatePerson")]
+    public async Task<IActionResult> UpdatePerson([FromBody] PersonEntity person)
     {
-        return dbContext.People
-            .AsNoTracking()
-            .Include(p => p.Addresses)
-            .Include(p => p.TelephoneConnections)
-            .AsSplitQuery();
+        if (!this.ModelState.IsValid)
+        {
+            return this.BadRequest(this.ModelState);
+        }
+
+        await dataService.UpdatePersonAsync(person, this.HttpContext.RequestAborted);
+
+        return this.NoContent();
+    }
+
+    /// <summary>
+    /// Create a person in the database.
+    /// </summary>
+    /// <param name="person">Person to create</param>
+    /// <returns>The created person</returns>
+    [HttpPut("CreatePerson")]
+    public async Task<IActionResult> CreatePerson([FromBody] PersonEntity person)
+    {
+        return this.Ok(await dataService.CreatePersonAsync(person, this.HttpContext.RequestAborted));
+    }
+
+    /// <summary>
+    /// Delete a person from the database.
+    /// </summary>
+    /// <param name="id">Person id to delete</param>
+    /// <returns>No content if successful</returns>
+    [HttpDelete("DeletePerson/{id}")]
+    public async Task<IActionResult> DeletePerson(uint id)
+    {
+        await dataService.DeletePersonAsync(id, this.HttpContext.RequestAborted);
+
+        return this.NoContent();
     }
 }

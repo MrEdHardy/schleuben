@@ -23,5 +23,5 @@ public sealed class TelephoneConnectionEntity
     /// <summary>
     /// Gets or sets the person associated with the telephone connection.
     /// </summary>
-    public PersonEntity Person { get; set; } = null!;
+    public PersonEntity? Person { get; set; }
 }

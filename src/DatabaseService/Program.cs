@@ -1,3 +1,5 @@
+using DatabaseService.Middleware;
+using DatabaseService.Services;
 using FluentMigrator.Runner;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,8 @@ using Shared.Infrastructure.Database;
 using Shared.Infrastructure.Database.Migrations;
 using Shared.Infrastructure.Database.Services;
 using System.IO.Abstractions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DatabaseService;
 
@@ -23,7 +27,13 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -70,11 +80,17 @@ public class Program
         // Add database service
         builder.Services.AddSingleton<IDatabaseService, FluentMigratorService>();
 
+        // Add person data service
+        builder.Services.AddScoped<IPersonDataService, PersonDataService>();
+
         // Add environment and file system
         var systemEnvironment = SystemEnvironmentProvider.Instance;
 
         builder.Services.AddSingleton(systemEnvironment);
         builder.Services.AddSingleton<IFileSystem>(fs);
+
+        // Add memory cache
+        builder.Services.AddMemoryCache();
 
         // Cancellation token source
         var cts = new CancellationTokenSource();
@@ -94,6 +110,11 @@ public class Program
         {
             app.MapOpenApi();
         }
+
+        // Register middleware
+        app.UseMiddleware<ErrorHandlerMiddleware>();
+
+        app.UseRouting();
 
         app.UseHttpsRedirection();
 

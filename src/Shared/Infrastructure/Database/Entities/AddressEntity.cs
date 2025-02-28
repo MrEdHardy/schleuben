@@ -43,5 +43,5 @@ public sealed class AddressEntity
     /// <summary>
     /// Gets or sets the person associated with the address.
     /// </summary>
-    public PersonEntity Person { get; set; } = null!;
+    public PersonEntity? Person { get; set; }
 }
