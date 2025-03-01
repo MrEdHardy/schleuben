@@ -1,38 +1,20 @@
-using ReadOnlyDataService.Configuration;
-using ReadOnlyDataService.Services;
+
+using MutableDataService.Configuration;
 using Shared.Infrastructure.Configuration.Json;
 using Shared.Infrastructure.Configuration.Resilience;
 using Shared.Infrastructure.Extensions;
-using Shared.Infrastructure.Middleware;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ReadOnlyDataService;
+namespace MutableDataService;
 
-/// <summary>
-/// Represents the entry point of the application.
-/// </summary>
 public class Program
 {
-    /// <summary>
-    /// The entry point of the application.
-    /// </summary>
-    /// <param name="args">Args</param>
-    /// <returns>Task</returns>
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        var tokenSource = new CancellationTokenSource();
-
-        Console.CancelKeyPress += (sender, e) =>
-        {
-            e.Cancel = true;
-            tokenSource.Cancel();
-        };
-
         // Add services to the container.
-
         var jsonSettings = new JsonSettings();
         builder.Configuration.GetSection("JsonSettings").Bind(jsonSettings);
 
@@ -51,17 +33,15 @@ public class Program
                 options.JsonSerializerOptions.WriteIndented = jsonSettings.WriteIndented;
             });
 
-        // Add logging
-        builder.Services.AddLogging();
+        // Add options
+        builder.Services.Configure<MutableDataServiceOptions>(
+            builder.Configuration.GetSection("MutableDataService"));
 
-        // Add options and provider
-        builder.Services.Configure<ReadOnlyDataServiceOptions>(
-            builder.Configuration.GetSection("ReadOnlyDataService"));
+        builder.Services.Configure<ResilienceSettings>(
+            builder.Configuration.GetSection("ResilienceSettings"));
 
-        // Add resiliency
-        builder.Services.Configure<ResilienceSettings>(builder.Configuration.GetSection("ResilienceSettings"));
-
-        const string identifier = "schleuben-readonly-database-service";
+        // Add http client and resilience
+        const string identifier = "schleuben-mutable-database-service";
 
         builder.Services
             .AddHttpClient("schleuben", builder =>
@@ -69,9 +49,6 @@ public class Program
                 builder.DefaultRequestHeaders.Add("data-service", identifier);
             })
             .AddSchleubenResilience(identifier);
-
-        // Add database service
-        builder.Services.AddScoped<IReadOnlyDatabaseService, ReadOnlyDatabaseService>();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -81,15 +58,12 @@ public class Program
         // Configure the HTTP request pipeline.
         app.MapOpenApi();
 
-        app.UseMiddleware<ErrorHandlerMiddleware>();
-        app.UseRouting();
-
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
         app.MapControllers();
 
-        await app.RunAsync(tokenSource.Token);
+        app.Run();
     }
 }
