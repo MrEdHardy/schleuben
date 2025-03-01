@@ -13,7 +13,7 @@ namespace DatabaseService.Controllers;
 /// <param name="logger"></param>
 /// <param name="dataService"></param>
 [ApiController]
-[Route("persons")]
+[Route("people")]
 public class PersonController(
     ILogger<PersonController> logger,
     IPersonDataService dataService) : ControllerBase
@@ -139,7 +139,7 @@ public class PersonController(
         {
             const string message = "Cannot delete a person with addresses or telephone connections.";
 
-            logger.LogWarning(e, message + " Id: {id}", id);
+            logger.LogError(e, message + " Id: {id}", id);
 
             return this.BadRequest(message);
         }

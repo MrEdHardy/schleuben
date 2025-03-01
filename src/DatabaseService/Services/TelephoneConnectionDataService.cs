@@ -60,8 +60,6 @@ public sealed class TelephoneConnectionDataService(DatabaseContext dbContext) : 
     {
         return dbContext.TelephoneConnections
             .AsNoTracking()
-            .Include(tc => tc.Person)
-            .AsSingleQuery()
             .OrderBy(tc => tc.Id);
     }
 }

@@ -51,8 +51,6 @@ public sealed class AddressDataService(DatabaseContext dbContext) : IAddressData
     {
         return dbContext.Addresses
             .AsNoTracking()
-            .Include(a => a.Person)
-            .AsSingleQuery()
             .OrderBy(a => a.Id);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Shared.Infrastructure.Database.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Shared.Infrastructure.Database.Entities;
 
 /// <summary>
 /// Represents an address entity.
@@ -43,5 +45,6 @@ public sealed class AddressEntity
     /// <summary>
     /// Gets or sets the person associated with the address.
     /// </summary>
+    [JsonIgnore]
     public PersonEntity? Person { get; set; }
 }

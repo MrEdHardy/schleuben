@@ -39,5 +39,5 @@ public sealed class JsonSettings
     /// </item>
     /// </list>
     /// </remarks>
-    public ReferenceHandlerType ReferenceHandler { get; set; } = ReferenceHandlerType.Preserve;
+    public ReferenceHandlerType ReferenceHandler { get; set; } = ReferenceHandlerType.Ignore;
 }

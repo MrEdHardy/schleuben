@@ -1,18 +1,22 @@
-@url = https://127.0.0.1:65535/
+@url = https://127.0.0.1:65535/people
 
-GET {{url}}persons/
+
+GET {{url}}openapi/v1.json
+
+###
+GET {{url}}
 
 ###
 
-GET {{url}}persons/getpersonbyid/1
+GET {{url}}/getpersonbyid/1
 
 ###
 
-GET {{url}}persons/getpersonbyid/0
+GET {{url}}/getpersonbyid/0
 
 ###
 
-PATCH {{url}}persons/updateperson
+PATCH {{url}}/updateperson
 Content-Type: application/json
 
 {
@@ -55,18 +59,9 @@ Content-Type: application/json
   }
 }
 
-###
-
-PATCH {{url}}persons/updateperson
-Content-Type: application/json
-
-{
-
-}
-
 ### Create new person
 # @name postCreate
-PUT {{url}}persons/createperson
+PUT {{url}}/createperson
 Content-Type: application/json
 
 {
@@ -80,7 +75,7 @@ Content-Type: application/json
 @id = {{postCreate.response.body.id}}
 
 ### Update new person
-PATCH {{url}}persons/updateperson
+PATCH {{url}}/updateperson
 Content-Type: application/json
 
 {
@@ -97,4 +92,4 @@ Content-Type: application/json
 }
 
 ### Delete newly created person
-DELETE {{url}}persons/deleteperson/{{id}} HTTP/1.1
+DELETE {{url}}/deleteperson/{{id}} HTTP/1.1

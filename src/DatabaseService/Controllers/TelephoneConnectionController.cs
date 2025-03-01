@@ -27,7 +27,7 @@ public class TelephoneConnectionController(
     /// </summary>
     /// <returns>Collection of all connections</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<AddressEntity>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(IEnumerable<TelephoneConnectionEntity>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
     [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
     public async Task<ActionResult<IEnumerable<TelephoneConnectionEntity>>> GetAllTelephoneConnections()
     {

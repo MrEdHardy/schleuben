@@ -1,4 +1,6 @@
-﻿namespace Shared.Infrastructure.Database.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Shared.Infrastructure.Database.Entities;
 
 /// <summary>
 /// Represents a telephone connection entity.
@@ -23,5 +25,6 @@ public sealed class TelephoneConnectionEntity
     /// <summary>
     /// Gets or sets the person associated with the telephone connection.
     /// </summary>
+    [JsonIgnore]
     public PersonEntity? Person { get; set; }
 }

@@ -14,7 +14,7 @@ public static partial class ControllerExtensions
     /// <param name="logger">Logger</param>
     /// <param name="id">ID</param>
     /// <returns>Bad request if invalid or null if valid</returns>
-    public static IActionResult? HandleId(this ControllerBase controller, ILogger logger, uint id)
+    public static ActionResult? HandleId(this ControllerBase controller, ILogger logger, uint id)
     {
         const string reason = "Invalid id was provided!";
 

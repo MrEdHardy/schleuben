@@ -9,12 +9,9 @@ namespace Shared.Infrastructure.Configuration.Json;
 /// for use within the application.
 /// </summary>
 public sealed class JsonSerializerOptionsProvider(IOptionsMonitor<JsonSettings> settings)
+    : IOptionsProvider<JsonSerializerOptions>
 {
-    /// <summary>
-    /// Retrieves the configured <see cref="JsonSerializerOptions"/> based on the current
-    /// <see cref="JsonSettings"/>.
-    /// </summary>
-    /// <returns>A <see cref="JsonSerializerOptions"/> instance configured with the current settings.</returns>
+    /// <inheritdoc/>
     public JsonSerializerOptions GetOptions()
     {
         var currentSettings = settings.CurrentValue;
