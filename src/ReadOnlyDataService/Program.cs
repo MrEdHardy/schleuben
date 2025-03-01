@@ -79,7 +79,10 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        app.MapOpenApi();
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+        }
 
         app.UseMiddleware<ErrorHandlerMiddleware>();
         app.UseRouting();

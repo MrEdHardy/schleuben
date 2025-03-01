@@ -1,6 +1,31 @@
-@ReadOnlyDataService_HostAddress = http://localhost:5294
+@ReadOnlyDataService_HostAddress = https://127.0.0.1:65534/
+@action = people/
+@byId = getbyid/
 
-GET {{ReadOnlyDataService_HostAddress}}/weatherforecast/
+GET {{ReadOnlyDataService_HostAddress}}{{action}}
 Accept: application/json
 
 ###
+
+GET {{ReadOnlyDataService_HostAddress}}{{action}}{{byId}}1
+
+###
+
+@addr = addresses/
+
+GET {{ReadOnlyDataService_HostAddress}}{{addr}}
+
+###
+
+GET {{ReadOnlyDataService_HostAddress}}{{addr}}{{byId}}1 HTTP/1.1
+
+###
+
+@tel = telephone-connections/
+
+
+GET {{ReadOnlyDataService_HostAddress}}{{tel}} HTTP/1.1
+
+###
+
+GET {{ReadOnlyDataService_HostAddress}}{{tel}}{{byId}}1 HTTP/1.1

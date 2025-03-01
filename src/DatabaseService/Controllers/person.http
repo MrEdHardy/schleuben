@@ -14,50 +14,6 @@ GET {{url}}/getpersonbyid/1
 
 GET {{url}}/getpersonbyid/0
 
-###
-
-PATCH {{url}}/updateperson
-Content-Type: application/json
-
-{
-  "$id": "1",
-  "Id": 1,
-  "FirstName": "Max",
-  "LastName": "Mustermann",
-  "BirthDate": "1999-01-01",
-  "TelephoneConnections": {
-    "$id": "2",
-    "$values": [
-      {
-        "$id": "3",
-        "Id": 1,
-        "PhoneNumber": "0123456789133742069",
-        "PersonId": 1,
-        "Person": {
-          "$ref": "1"
-        }
-      }
-    ]
-  },
-  "Addresses": {
-    "$id": "4",
-    "$values": [
-      {
-        "$id": "5",
-        "Id": 1,
-        "Street": "Musterstra\u00DFe",
-        "HouseNumber": "1",
-        "City": "Musterstadt",
-        "ZipCode": "12345",
-        "AdditionalInfo": null,
-        "PersonId": 1,
-        "Person": {
-          "$ref": "1"
-        }
-      }
-    ]
-  }
-}
 
 ### Create new person
 # @name postCreate
