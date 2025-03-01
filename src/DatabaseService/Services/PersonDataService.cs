@@ -23,6 +23,11 @@ public sealed class PersonDataService(DatabaseContext dbContext) : IPersonDataSe
         var entity = await this.GetBasePersonQuery()
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
+        if (entity?.Addresses.Count > 0 || entity?.TelephoneConnections.Count > 0)
+        {
+            throw new InvalidOperationException("Cannot delete a person with addresses or telephone connections.");
+        }
+
         await dbContext.DeleteEntity(entity, cancellationToken);
     }
 

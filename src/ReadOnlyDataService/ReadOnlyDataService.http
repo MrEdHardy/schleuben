@@ -1,0 +1,6 @@
+@ReadOnlyDataService_HostAddress = http://localhost:5294
+
+GET {{ReadOnlyDataService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

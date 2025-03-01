@@ -1,7 +1,8 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Http;
+using System.Net;
 using System.Text.Json;
 
-namespace DatabaseService.Middleware;
+namespace Shared.Infrastructure.Middleware;
 
 /// <summary>
 /// Middleware for handling unhandled exceptions.
@@ -29,9 +30,10 @@ public sealed partial class ErrorHandlerMiddleware(
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                error = "An error occurred while processing the request."
+                error = "An error occurred while processing the request.",
             }));
         }
     }

@@ -114,7 +114,19 @@ public class PersonController(
             return idHandleResult;
         }
 
-        await dataService.DeletePersonAsync(id, this.HttpContext.RequestAborted);
+        try
+        {
+            await dataService.DeletePersonAsync(id, this.HttpContext.RequestAborted);
+
+        }
+        catch (InvalidOperationException e)
+        {
+            const string message = "Cannot delete a person with addresses or telephone connections.";
+
+            logger.LogWarning(e, message + " Id: {id}", id);
+
+            return this.BadRequest(message);
+        }
 
         return this.NoContent();
     }

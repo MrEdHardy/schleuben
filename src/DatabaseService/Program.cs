@@ -1,4 +1,3 @@
-using DatabaseService.Middleware;
 using DatabaseService.Services;
 using FluentMigrator.Runner;
 using Microsoft.Data.Sqlite;
@@ -7,6 +6,7 @@ using Shared.Infrastructure.Configuration.Json;
 using Shared.Infrastructure.Database;
 using Shared.Infrastructure.Database.Migrations;
 using Shared.Infrastructure.Database.Services;
+using Shared.Infrastructure.Middleware;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
