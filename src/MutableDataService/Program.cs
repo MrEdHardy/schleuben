@@ -19,9 +19,17 @@ public class Program
     /// The entry point of the application.
     /// </summary>
     /// <param name="args">Args</param>
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        var tokenSource = new CancellationTokenSource();
+
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true;
+            tokenSource.Cancel();
+        };
 
         // Add services to the container.
         var jsonSettings = new JsonSettings();
@@ -83,6 +91,9 @@ public class Program
 
         app.MapControllers();
 
-        app.Run();
+        var endpointProvider = app.Services.GetRequiredService<EndpointProviderService>();
+        await endpointProvider.InitializeEndpoints(tokenSource.Token);
+
+        await app.RunAsync(tokenSource.Token);
     }
 }

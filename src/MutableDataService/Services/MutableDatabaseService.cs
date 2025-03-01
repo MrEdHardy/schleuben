@@ -97,7 +97,7 @@ public sealed class MutableDatabaseService(
 
         using var client = clientFactory.CreateClient("schleuben");
 
-        string formattedEndpoint = Smart.Format(endpoint.ToString(), id);
+        string formattedEndpoint = Smart.Format(endpoint.ToString(), new { id });
 
         var response = await client.DeleteAsync(formattedEndpoint, cancellationToken);
 

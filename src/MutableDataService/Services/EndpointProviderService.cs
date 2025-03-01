@@ -64,6 +64,8 @@ public sealed class EndpointProviderService(
                     semaphore.Release();
                 }
             };
+
+            timer.Start();
         }
         catch (Exception e)
         {

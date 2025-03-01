@@ -1,6 +1,30 @@
-@MutableDataService_HostAddress = http://localhost:5165
+@MutableDataService_HostAddress = https://localhost:65533/
+@person = people/
 
-GET {{MutableDataService_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create Person
+# @name postPersonCreate
+PUT {{MutableDataService_HostAddress}}{{person}}create
+Content-Type: application/json
 
-###
+{
+    "FirstName": "Lustig",
+    "LastName": "Petra"
+}
+
+### Update Person
+
+@newId = {{postPersonCreate.response.body.id}}
+
+PATCH {{MutableDataService_HostAddress}}{{person}}update
+Content-Type: application/json
+
+{
+    "Id": "{{newId}}",
+    "FirstName": "Lustige",
+    "LastName": "Fee"
+}
+
+### Delete Person
+
+DELETE {{MutableDataService_HostAddress}}{{person}}delete/{{newId}} HTTP/1.1
+
