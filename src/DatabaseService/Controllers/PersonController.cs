@@ -2,6 +2,8 @@
 using DatabaseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
+using System.Net;
+using System.Net.Mime;
 
 namespace DatabaseService.Controllers;
 
@@ -29,7 +31,9 @@ public class PersonController(
     /// <response code="200">Returns the JSON string of all persons.</response>
     /// <response code="500">If an error occurs while accessing the database.</response>
     [HttpGet]
-    public async Task<IActionResult> GetAllPersons()
+    [ProducesResponseType(typeof(IEnumerable<PersonEntity>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<IEnumerable<PersonEntity>>> GetAllPersons()
     {
         return this.Ok(await dataService.GetPeopleAsync(this.HttpContext.RequestAborted));
     }
@@ -47,7 +51,11 @@ public class PersonController(
     /// <response code="404">If no person with the specified ID is found.</response>
     /// <response code="500">If an error occurs while accessing the database.</response>
     [HttpGet("GetPersonById/{id}")]
-    public async Task<IActionResult> GetPersonById(uint id)
+    [ProducesResponseType(typeof(PersonEntity), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<PersonEntity>> GetPersonById(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 
@@ -69,7 +77,10 @@ public class PersonController(
     /// <param name="person">Person to be updated</param>
     /// <returns>No content if it succeeds</returns>
     [HttpPatch("UpdatePerson")]
-    public async Task<IActionResult> UpdatePerson([FromBody] PersonEntity person)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> UpdatePerson([FromBody] PersonEntity person)
     {
         if (!this.ModelState.IsValid)
         {
@@ -87,7 +98,10 @@ public class PersonController(
     /// <param name="person">Person to create</param>
     /// <returns>The created person</returns>
     [HttpPut("CreatePerson")]
-    public async Task<IActionResult> CreatePerson([FromBody] PersonEntity person)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(PersonEntity), (int)HttpStatusCode.Created, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<PersonEntity>> CreatePerson([FromBody] PersonEntity person)
     {
         if (!this.ModelState.IsValid)
         {
@@ -105,7 +119,9 @@ public class PersonController(
     /// <param name="id">Person id to delete</param>
     /// <returns>No content if successful</returns>
     [HttpDelete("DeletePerson/{id}")]
-    public async Task<IActionResult> DeletePerson(uint id)
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> DeletePerson(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 

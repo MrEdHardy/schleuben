@@ -2,6 +2,8 @@
 using DatabaseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
+using System.Net;
+using System.Net.Mime;
 
 namespace DatabaseService.Controllers;
 
@@ -25,7 +27,9 @@ public class TelephoneConnectionController(
     /// </summary>
     /// <returns>Collection of all connections</returns>
     [HttpGet]
-    public async Task<IActionResult> GetAllTelephoneConnections()
+    [ProducesResponseType(typeof(IEnumerable<AddressEntity>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<IEnumerable<TelephoneConnectionEntity>>> GetAllTelephoneConnections()
     {
         return this.Ok(await dataService.GetTelephoneConnectionsAsync(this.HttpContext.RequestAborted));
     }
@@ -36,7 +40,11 @@ public class TelephoneConnectionController(
     /// <param name="id">Identifier</param>
     /// <returns>Found connection or bad request or not found</returns>
     [HttpGet("GetTelephoneConnectionById/{id}")]
-    public async Task<IActionResult> GetTelephoneConnectionById(uint id)
+    [ProducesResponseType(typeof(TelephoneConnectionEntity), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<TelephoneConnectionEntity>> GetTelephoneConnectionById(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 
@@ -56,7 +64,10 @@ public class TelephoneConnectionController(
     /// <param name="telephoneConnection">Connection to update</param>
     /// <returns>No content</returns>
     [HttpPatch("UpdateTelephoneConnection")]
-    public async Task<IActionResult> UpdateTelephoneConnection(
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> UpdateTelephoneConnection(
         [FromBody] TelephoneConnectionEntity telephoneConnection)
     {
         await dataService.UpdateTelephoneConnectionAsync(telephoneConnection, this.HttpContext.RequestAborted);
@@ -69,7 +80,11 @@ public class TelephoneConnectionController(
     /// <param name="telephoneConnection">Connection to create</param>
     /// <returns>Newly created connection</returns>
     [HttpPut("CreateTelephoneConnection")]
-    public async Task<IActionResult> CreateTelephoneConnection(
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(
+        typeof(TelephoneConnectionEntity), (int)HttpStatusCode.Created, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<TelephoneConnectionEntity>> CreateTelephoneConnection(
         [FromBody] TelephoneConnectionEntity telephoneConnection)
     {
         var result = await dataService.CreateTelephoneConnectionAsync(
@@ -85,7 +100,9 @@ public class TelephoneConnectionController(
     /// <param name="id">The ID of the telephone connection to delete.</param>
     /// <returns>No content if the deletion was successful, otherwise a bad request or not found result.</returns>
     [HttpDelete("DeleteTelephoneConnection/{id}")]
-    public async Task<IActionResult> DeleteTelephoneConnection(uint id)
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> DeleteTelephoneConnection(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 

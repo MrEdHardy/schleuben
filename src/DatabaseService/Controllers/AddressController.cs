@@ -2,6 +2,8 @@
 using DatabaseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Infrastructure.Database.Entities;
+using System.Net;
+using System.Net.Mime;
 
 namespace DatabaseService.Controllers;
 
@@ -21,7 +23,9 @@ public sealed class AddressController(
     /// </summary>
     /// <returns>An enumerable of addresses</returns>
     [HttpGet]
-    public async Task<IActionResult> GetAllAddresses()
+    [ProducesResponseType(typeof(IEnumerable<AddressEntity>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<IEnumerable<AddressEntity>>> GetAllAddresses()
     {
         return this.Ok(await dataService.GetAddressesAsync(this.HttpContext.RequestAborted));
     }
@@ -32,7 +36,11 @@ public sealed class AddressController(
     /// <param name="id">Id</param>
     /// <returns>The found address or not found</returns>
     [HttpGet("GetAddressById/{id}")]
-    public async Task<IActionResult> GetAddressById(uint id)
+    [ProducesResponseType(typeof(AddressEntity), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<AddressEntity>> GetAddressById(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 
@@ -54,7 +62,10 @@ public sealed class AddressController(
     /// <param name="address">Address to be created</param>
     /// <returns>The newly created entity</returns>
     [HttpPut("CreateAddress")]
-    public async Task<IActionResult> CreateAddress([FromBody] AddressEntity address)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(AddressEntity), (int)HttpStatusCode.Created, MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult<AddressEntity>> CreateAddress([FromBody] AddressEntity address)
     {
         var result = await dataService.CreateAddressAsync(address, this.HttpContext.RequestAborted);
 
@@ -67,7 +78,10 @@ public sealed class AddressController(
     /// <param name="address">Address to be updated</param>
     /// <returns>No content</returns>
     [HttpPatch("UpdateAddress")]
-    public async Task<IActionResult> UpdateAddress([FromBody] AddressEntity address)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> UpdateAddress([FromBody] AddressEntity address)
     {
         await dataService.UpdateAddressAsync(address, this.HttpContext.RequestAborted);
 
@@ -80,7 +94,9 @@ public sealed class AddressController(
     /// <param name="id">Id to be deleted</param>
     /// <returns>No content</returns>
     [HttpDelete("DeleteAddress/{id}")]
-    public async Task<IActionResult> DeleteAddress(uint id)
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+    public async Task<ActionResult> DeleteAddress(uint id)
     {
         var idHandleResult = this.HandleId(logger, id);
 
