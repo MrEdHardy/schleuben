@@ -1,0 +1,30 @@
+﻿@using Shared.Infrastructure.Database.Entities;
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="Address.Street" Label="Straße" Required="true" />
+        <MudTextField @bind-Value="Address.HouseNumber" Label="Hausnummer" Required="true" />
+        <MudTextField @bind-Value="Address.City" Label="Stadt" Required="true" />
+        <MudTextField @bind-Value="Address.ZipCode" Label="PLZ" Required="true" />
+        <MudTextField @bind-Value="Address.AdditionalInfo" Label="Zusatzinfo" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnSave" Color="Color.Primary" Variant="Variant.Filled">Speichern</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Abbrechen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public required IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public required AddressEntity Address { get; set; }
+
+    void OnSave()
+    {
+        MudDialog.Close(DialogResult.Ok(Address));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

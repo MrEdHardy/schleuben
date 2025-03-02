@@ -1,0 +1,26 @@
+﻿@using Shared.Infrastructure.Database.Entities;
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="Connection.PhoneNumber" Label="Telefonnummer" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnSave" Color="Color.Primary" Variant="Variant.Filled">Speichern</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Abbrechen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public required IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public required TelephoneConnectionEntity Connection { get; set; }
+
+    void OnSave()
+    {
+        MudDialog.Close(DialogResult.Ok(this.Connection));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
