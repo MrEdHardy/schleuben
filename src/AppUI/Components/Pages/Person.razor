@@ -1,0 +1,79 @@
+﻿@page "/person"
+
+@using Shared.Infrastructure.Database.Entities
+
+<MudDataGrid T="PersonEntity" Items="@elements" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickSearch"
+Hideable="true" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered ="true"
+Virtualize="true" FixedHeader="true" FixedFooter="true" 
+Height="450px">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Personenverwaltung</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Suche" Adornment="Adornment.Start"
+        Immediate="true" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <SelectColumn T="PersonEntity" />
+        <PropertyColumn Property="x => x.FirstName" Title="Vorname" />
+        <PropertyColumn Property="x => x.LastName" Title="Nachname" />
+        <PropertyColumn Property="x => x.BirthDate" Title="Geburtsdatum">
+            <EditTemplate Context="person">
+                <MudDatePicker Label="Geburtsdatum"
+                       Date="@(person.Item.BirthDate.HasValue 
+                                ? person.Item.BirthDate.Value.ToDateTime(new TimeOnly(0, 0)) 
+                                : (DateTime?)null)"
+                       DateChanged="@(newDate => person.Item.BirthDate = newDate.HasValue 
+                                                    ? DateOnly.FromDateTime(newDate.Value) 
+                                                    : null)"
+                       Mask="@(new DateMask("dd.MM.yyyy"))"
+                       DateFormat="dd.MM.yyyy" />
+            </EditTemplate>
+        </PropertyColumn>
+    </Columns>
+</MudDataGrid>
+
+@code
+{
+    private IEnumerable<PersonEntity> elements = new List<PersonEntity>
+    {
+        new PersonEntity { FirstName = "Test", LastName = "User", BirthDate = DateOnly.FromDateTime(DateTime.Parse("02.02.2022"))},
+        new PersonEntity { FirstName = "Peter", LastName = "Lustig" },
+        new PersonEntity { FirstName = "Verrückter", LastName = "Typ", BirthDate = DateOnly.FromDateTime(DateTime.Parse("01.01.2011")) },
+    };
+
+    private string searchString = string.Empty;
+
+    private Func<PersonEntity, bool> QuickSearch => x =>
+    {
+        if (string.IsNullOrEmpty(searchString))
+        {
+            return true;
+        }
+
+        if (x.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (x.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if ($"{x.FirstName} {x.LastName}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (DateTime.TryParse(searchString, out var dateTime) && x.BirthDate.HasValue && DateOnly.FromDateTime(dateTime) is DateOnly dateOnly 
+            && (x.BirthDate == dateOnly 
+                || x.BirthDate.Value.Year == dateOnly.Year 
+                || x.BirthDate.Value.Month == dateOnly.Month
+                || x.BirthDate.Value.Day == dateOnly.Day))
+        {
+            return true;
+        }
+
+        return false;
+    };
+}

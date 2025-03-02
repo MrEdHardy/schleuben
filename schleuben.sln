@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadOnlyDataService", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableDataService", "src\MutableDataService\MutableDataService.csproj", "{45E6A66F-8125-4098-9D13-FAD815EBBE9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppUI", "src\AppUI\AppUI.csproj", "{0D37E5F8-026E-45F3-86AF-B9A5A0C448AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{45E6A66F-8125-4098-9D13-FAD815EBBE9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45E6A66F-8125-4098-9D13-FAD815EBBE9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45E6A66F-8125-4098-9D13-FAD815EBBE9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D37E5F8-026E-45F3-86AF-B9A5A0C448AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D37E5F8-026E-45F3-86AF-B9A5A0C448AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D37E5F8-026E-45F3-86AF-B9A5A0C448AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D37E5F8-026E-45F3-86AF-B9A5A0C448AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
