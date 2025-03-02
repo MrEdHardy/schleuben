@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using ReadOnlyDataService.Configuration;
-using Shared.Infrastructure.Configuration.OpenApi;
+﻿using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Database.Entities;
 using SmartFormat;
 
@@ -10,19 +8,11 @@ namespace ReadOnlyDataService.Services;
 /// Represents a service for reading data from the database.
 /// </summary>
 /// <param name="clientFactory">Http client factory</param>
-/// <param name="optionsMonitor">Options</param>
+/// <param name="endpointProvider"></param>
 internal sealed class ReadOnlyDatabaseService(
     IHttpClientFactory clientFactory,
-    IOptionsMonitor<ReadOnlyDataServiceOptions> optionsMonitor) : IReadOnlyDatabaseService
+    IEndpointProviderService endpointProvider) : IReadOnlyDatabaseService
 {
-    private static readonly HashSet<string> paths = [];
-    private static readonly SemaphoreSlim semaphore = new(1, 1);
-
-    private static bool pathsInitialized;
-    private static Uri? currentBaseUri;
-
-    private readonly ReadOnlyDataServiceOptions options = optionsMonitor.CurrentValue;
-
     /// <inheritdoc/>
     public Task<AddressEntity?> GetAddressByIdAsync(uint id, CancellationToken cancellationToken)
     {
@@ -60,71 +50,6 @@ internal sealed class ReadOnlyDatabaseService(
         CancellationToken cancellationToken)
     {
         return this.GetMany<TelephoneConnectionEntity>("telephone-connections", cancellationToken);
-    }
-
-    private static async Task InitializePaths(Uri baseUri, CancellationToken cancellationToken)
-    {
-        if (pathsInitialized)
-        {
-            return;
-        }
-
-        await semaphore.WaitAsync(cancellationToken);
-
-        try
-        {
-            currentBaseUri = baseUri;
-
-            var result = await OpenApiDefinitionResolver.ParseCapabilities(new Uri(
-                baseUri,
-                "/openapi/v1.json"), cancellationToken);
-
-            foreach (string path in result)
-            {
-                paths.Add(path);
-            }
-
-            pathsInitialized = true;
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-    }
-
-    private static async Task CheckCurrentBaseUri(Uri? currentlyActiveUri, CancellationToken cancellationToken)
-    {
-        currentBaseUri ??= currentlyActiveUri;
-
-        if (currentBaseUri != currentlyActiveUri)
-        {
-            currentBaseUri = currentlyActiveUri;
-            pathsInitialized = false;
-
-        }
-
-        if (pathsInitialized || currentlyActiveUri is null)
-        {
-            return;
-        }
-
-        paths.Clear();
-
-        await InitializePaths(currentlyActiveUri, cancellationToken);
-    }
-
-    private static string? GetPathFragment(string searchString)
-    {
-        return !pathsInitialized
-            ? null
-            : paths.FirstOrDefault(k => k.Contains(searchString, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private Uri? GetBaseDatabaseServiceUri()
-    {
-        _ = this.options.Addresses.TryGetValue("DatabaseService", out var uri);
-
-        return uri;
     }
 
     private Task<T?> GetById<T>(string searchTerm, uint id, CancellationToken cancellationToken)
@@ -165,19 +90,11 @@ internal sealed class ReadOnlyDatabaseService(
         TResult defaultValue,
         CancellationToken cancellationToken)
     {
-        var uri = this.GetBaseDatabaseServiceUri();
 
-        await CheckCurrentBaseUri(uri, cancellationToken);
+        var openApiUri = await endpointProvider.GetEndpoint(searchTerm, cancellationToken);
 
-        string? path = GetPathFragment(searchTerm);
-
-        if (uri is null || path is null)
-        {
-            return defaultValue;
-        }
-
-        var fullUri = new Uri(uri, path);
-
-        return await operation.Invoke(fullUri, cancellationToken);
+        return openApiUri is null
+            ? defaultValue
+            : await operation.Invoke(openApiUri, cancellationToken);
     }
 }

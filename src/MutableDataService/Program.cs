@@ -1,7 +1,9 @@
-
+using Microsoft.Extensions.Options;
 using MutableDataService.Configuration;
 using MutableDataService.Services;
+using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.Json;
+using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Configuration.Resilience;
 using Shared.Infrastructure.Extensions;
 using Shared.Infrastructure.Middleware;
@@ -54,11 +56,14 @@ public class Program
         builder.Services.Configure<MutableDataServiceOptions>(
             builder.Configuration.GetSection("MutableDataService"));
 
+        builder.Services.AddSingleton<IOptionsMonitor<IAddressSettings>>(provider => provider
+            .GetRequiredService<IOptionsMonitor<MutableDataServiceOptions>>());
+
         builder.Services.Configure<ResilienceSettings>(
             builder.Configuration.GetSection("ResilienceSettings"));
 
         // Add endpoint provider
-        builder.Services.AddSingleton<EndpointProviderService>();
+        builder.Services.AddSingleton<IEndpointProviderService, DefaultEndpointProviderService>();
 
         // Add http client and resilience
         const string identifier = "schleuben-mutable-database-service";
@@ -90,9 +95,6 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
-
-        var endpointProvider = app.Services.GetRequiredService<EndpointProviderService>();
-        await endpointProvider.InitializeEndpoints(tokenSource.Token);
 
         await app.RunAsync(tokenSource.Token);
     }

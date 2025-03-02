@@ -1,31 +1,24 @@
 ﻿using Microsoft.Extensions.Options;
-using MutableDataService.Configuration;
+using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.OpenApi;
 using Timer = System.Timers.Timer;
 
 namespace MutableDataService.Services;
 
 /// <summary>
-/// Service for providing endpoints.
+/// Default service for providing endpoints.
 /// </summary>
 /// <param name="logger">Logger</param>
 /// <param name="optionsMonitor">Options monitor</param>
-public sealed class EndpointProviderService(
-    ILogger<EndpointProviderService> logger,
-    IOptionsMonitor<MutableDataServiceOptions> optionsMonitor)
+public sealed class DefaultEndpointProviderService(
+    ILogger<DefaultEndpointProviderService> logger,
+    IOptionsMonitor<IAddressSettings> optionsMonitor) : IEndpointProviderService
 {
-    private static readonly SemaphoreSlim semaphore = new(1, 1);
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
     private readonly HashSet<string> endPoints = [];
 
-    /// <summary>
-    /// Initializes the endpoints.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task</returns>
-    /// <exception cref="InvalidOperationException">
-    /// If no uri or relative path to an open api document are configured.
-    /// </exception>
+    /// <inheritdoc/>
     public async Task InitializeEndpoints(CancellationToken cancellationToken)
     {
         if (this.endPoints.Count > 0)
@@ -33,7 +26,7 @@ public sealed class EndpointProviderService(
             return;
         }
 
-        await semaphore.WaitAsync(cancellationToken);
+        await Semaphore.WaitAsync(cancellationToken);
 
         try
         {
@@ -47,7 +40,7 @@ public sealed class EndpointProviderService(
 
             timer.Elapsed += async (_, _) =>
             {
-                await semaphore.WaitAsync();
+                await Semaphore.WaitAsync();
 
                 try
                 {
@@ -61,7 +54,7 @@ public sealed class EndpointProviderService(
                 }
                 finally
                 {
-                    semaphore.Release();
+                    Semaphore.Release();
                 }
             };
 
@@ -74,42 +67,22 @@ public sealed class EndpointProviderService(
         }
         finally
         {
-            semaphore.Release();
+            Semaphore.Release();
         }
     }
 
-    /// <summary>
-    /// Retrieves the endpoints.
-    /// </summary>
-    /// <returns>Collection of endpoints</returns>
-    public async Task<IEnumerable<string>> GetEndPoints()
+    /// <inheritdoc/>
+    public async Task<Uri?> GetEndpoint(
+        string searchTerm,
+        CancellationToken cancellationToken,
+        string? typeIdentifier = null)
     {
-        await semaphore.WaitAsync();
-
-        try
+        if (this.endPoints.Count <= 0)
         {
-            return this.endPoints;
+            await this.InitializeEndpoints(cancellationToken);
         }
-        catch (Exception)
-        {
 
-            throw;
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-    }
-
-    /// <summary>
-    /// Retrieves an endpoint by the specified search term.
-    /// </summary>
-    /// <param name="searchTerm">Endpoint search term</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The matched endpoint as an absolute uri or null if not found</returns>
-    public async Task<Uri?> GetEndpoint(string searchTerm, CancellationToken cancellationToken)
-    {
-        await semaphore.WaitAsync(cancellationToken);
+        await Semaphore.WaitAsync(cancellationToken);
 
         try
         {
@@ -117,7 +90,7 @@ public sealed class EndpointProviderService(
 
             if (result is not null)
             {
-                return new Uri(this.GetBaseUri(), result);
+                return new Uri(this.GetUri("DatabaseService"), result);
             }
 
             string? containsSearch = this.endPoints
@@ -125,11 +98,11 @@ public sealed class EndpointProviderService(
 
             return containsSearch is null
                 ? null
-                : new Uri(this.GetBaseUri(), containsSearch);
+                : new Uri(this.GetUri("DatabaseService"), containsSearch);
         }
         finally
         {
-            semaphore.Release();
+            Semaphore.Release();
         }
     }
 
@@ -151,32 +124,23 @@ public sealed class EndpointProviderService(
 
     private Uri GetOpenApiUri()
     {
-        var options = optionsMonitor.CurrentValue;
-        var uri = this.GetBaseUri();
+        var baseUri = this.GetUri("DatabaseService");
+        var openApiUri = this.GetUri("OpenApiPath");
 
-        if (string.IsNullOrWhiteSpace(options.OpenApiPath))
-        {
-            const string message = "No relative path to open api spec is configured.";
-
-            logger.LogError(message);
-
-            throw new InvalidOperationException(message);
-        }
-
-        return new Uri(uri, options.OpenApiPath);
+        return new Uri(baseUri, openApiUri);
     }
 
-    private Uri GetBaseUri()
+    private Uri GetUri(string key)
     {
         var options = optionsMonitor.CurrentValue;
 
-        _ = options.Addresses.TryGetValue("DatabaseService", out var uri);
+        _ = options.Addresses.TryGetValue(key, out var uri);
 
         if (uri is null)
         {
-            const string message = "DatabaseService URI is not configured.";
+            const string message = "{key} is not a configured uri.";
 
-            logger.LogError(message);
+            logger.LogError(message, key);
 
             throw new InvalidOperationException(message);
         }

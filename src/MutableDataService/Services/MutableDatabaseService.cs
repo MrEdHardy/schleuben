@@ -1,4 +1,5 @@
-﻿using Shared.Infrastructure.Database.Entities;
+﻿using Shared.Infrastructure.Configuration.OpenApi;
+using Shared.Infrastructure.Database.Entities;
 using SmartFormat;
 
 namespace MutableDataService.Services;
@@ -8,7 +9,7 @@ namespace MutableDataService.Services;
 /// </summary>
 public sealed class MutableDatabaseService(
     IHttpClientFactory clientFactory,
-    EndpointProviderService endpointProvider) : IMutableDatabaseService
+    IEndpointProviderService endpointProvider) : IMutableDatabaseService
 {
     /// <inheritdoc/>
     public Task<AddressEntity> CreateAddressAsync(AddressEntity address, CancellationToken cancellationToken)

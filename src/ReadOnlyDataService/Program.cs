@@ -1,6 +1,10 @@
+using Microsoft.Extensions.Options;
+using MutableDataService.Services;
 using ReadOnlyDataService.Configuration;
 using ReadOnlyDataService.Services;
+using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.Json;
+using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Configuration.Resilience;
 using Shared.Infrastructure.Extensions;
 using Shared.Infrastructure.Middleware;
@@ -58,6 +62,9 @@ public class Program
         builder.Services.Configure<ReadOnlyDataServiceOptions>(
             builder.Configuration.GetSection("ReadOnlyDataService"));
 
+        builder.Services.AddSingleton<IOptionsMonitor<IAddressSettings>>(provider => provider
+            .GetRequiredService<IOptionsMonitor<ReadOnlyDataServiceOptions>>());
+
         // Add resiliency
         builder.Services.Configure<ResilienceSettings>(builder.Configuration.GetSection("ResilienceSettings"));
 
@@ -72,6 +79,9 @@ public class Program
 
         // Add database service
         builder.Services.AddScoped<IReadOnlyDatabaseService, ReadOnlyDatabaseService>();
+
+        // Add endpoint provider
+        builder.Services.AddSingleton<IEndpointProviderService, DefaultEndpointProviderService>();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
