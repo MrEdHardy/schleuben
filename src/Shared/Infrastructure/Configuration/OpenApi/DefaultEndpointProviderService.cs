@@ -34,7 +34,7 @@ public sealed class DefaultEndpointProviderService(
 
             var timer = new Timer
             {
-                Interval = TimeSpan.FromMinutes(1).TotalMilliseconds,
+                Interval = TimeSpan.FromMinutes(5).TotalMilliseconds,
                 AutoReset = true,
             };
 
@@ -63,6 +63,7 @@ public sealed class DefaultEndpointProviderService(
         catch (Exception e)
         {
             logger.LogError(e, "Failed to initialize endpoints.");
+
             throw;
         }
         finally

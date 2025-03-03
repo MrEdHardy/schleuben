@@ -25,6 +25,29 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds a resilient http factory
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Configuration</param>
+    /// <param name="identifier">Identifier</param>
+    public static void AddResilientHttpClientFactory(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string identifier)
+    {
+        services.Configure<ResilienceSettings>(configuration.GetSection("ResilienceSettings"));
+
+        const string baseIdentifier = "schleuben-";
+
+        services
+            .AddHttpClient("schleuben", builder =>
+            {
+                builder.DefaultRequestHeaders.Add("data-service", baseIdentifier + identifier);
+            })
+            .AddSchleubenResilience(baseIdentifier + identifier);
+    }
+
+    /// <summary>
     /// Adds the Schleuben resilience configuration to the specified <see cref="IHttpClientBuilder"/>.
     /// </summary>
     /// <param name="builder">Http client builder</param>
