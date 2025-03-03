@@ -47,4 +47,13 @@ public sealed class AddressEntity
     /// </summary>
     [JsonIgnore]
     public PersonEntity? Person { get; set; }
+
+    /// <inheritdoc/>
+    public override string? ToString()
+    {
+        return $"""
+        {this.Street} {this.HouseNumber}
+        {this.ZipCode} {this.City}
+        """;
+    }
 }

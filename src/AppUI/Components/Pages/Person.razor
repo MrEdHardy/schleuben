@@ -1,13 +1,14 @@
 ﻿@page "/person"
 
-@using Shared.Infrastructure.Database.Entities
+@using Shared.Infrastructure.Database.Entities;
 @using Components.Dialogs;
 
-@inject IDialogService dialogService
+@inject IDialogService dialogService;
+@inject ISnackbar snackbar;
 
 <MudDataGrid T="PersonEntity" Items="@elements" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickSearch"
 Hideable="true" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered ="true"
-Virtualize="true" FixedHeader="true" FixedFooter="true" 
+Virtualize="true" FixedHeader="true" FixedFooter="true" SelectedItemChanged="@(person => this.selectedPerson = person)"
 Height="450px">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Personenverwaltung</MudText>
@@ -22,14 +23,14 @@ Height="450px">
         <PropertyColumn Property="x => x.BirthDate" Title="Geburtsdatum">
             <EditTemplate Context="person">
                 <MudDatePicker Label="Geburtsdatum"
-                    Date="@(person.Item.BirthDate.HasValue 
+                Date="@(person.Item.BirthDate.HasValue 
                         ? person.Item.BirthDate.Value.ToDateTime(new TimeOnly(0, 0)) 
                         : (DateTime?)null)"
-                    DateChanged="@(newDate => person.Item.BirthDate = newDate.HasValue 
+                DateChanged="@(newDate => person.Item.BirthDate = newDate.HasValue 
                         ? DateOnly.FromDateTime(newDate.Value) 
                         : null)"
-                    Mask="@(new DateMask("dd.MM.yyyy"))"
-                    DateFormat="dd.MM.yyyy" RelativeWidth="DropdownWidth.Adaptive" />
+                Mask="@(new DateMask("dd.MM.yyyy"))"
+                DateFormat="dd.MM.yyyy" RelativeWidth="DropdownWidth.Adaptive" />
             </EditTemplate>
         </PropertyColumn>
 
@@ -37,8 +38,8 @@ Height="450px">
             <EditTemplate Context="person">
                 <MudText Typo="Typo.h6">Adressen</MudText>
                 <MudDataGrid T="AddressEntity" Items="@person.Item.Addresses"
-                    EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" EditTrigger="DataGridEditTrigger.OnRowClick"
-                    Hideable="true" SortMode="SortMode.Multiple" SelectedItemChanged="@SelectedAddressChanged">
+                EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" EditTrigger="DataGridEditTrigger.OnRowClick"
+                Hideable="true" SortMode="SortMode.Multiple" SelectedItemChanged="@(address => this.selectedAddress = address)">
                     <Columns>
                         <SelectColumn T="AddressEntity" />
                         <PropertyColumn Property="x => x.Street" Title="Straße" />
@@ -49,9 +50,9 @@ Height="450px">
                     </Columns>
                     <PagerContent>
                         <MudButton OnClick="@(() => OpenAddAddressDialog(person.Item))" 
-                            Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
+                        Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
                         <MudButton OnClick="@(() => DeleteAddress(person.Item))" 
-                            Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
+                        Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </EditTemplate>
@@ -61,17 +62,17 @@ Height="450px">
             <EditTemplate Context="person">
                 <MudText Typo="Typo.h6">Telefonverbindungen</MudText>
                 <MudDataGrid T="TelephoneConnectionEntity" Items="@person.Item.TelephoneConnections" 
-                    EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" Hideable="true" 
-                    SortMode="SortMode.Multiple" SelectedItemChanged="@SelectedConnetionChanged">
+                EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" Hideable="true" 
+                SortMode="SortMode.Multiple" SelectedItemChanged="@(connection => this.selectedConnection = connection)">
                     <Columns>
                         <SelectColumn T="TelephoneConnectionEntity" />
                         <PropertyColumn Property="x => x.PhoneNumber" Title="Telefonnummer" />
                     </Columns>
                     <PagerContent>
                         <MudButton OnClick="@(() => OpenAddTelephoneConnectionDialog(person.Item))" 
-                            Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
+                        Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
                         <MudButton OnClick="@(() => DeleteConnection(person.Item))" 
-                            Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
+                        Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </EditTemplate>
@@ -79,14 +80,14 @@ Height="450px">
     </Columns>
 
     <PagerContent>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
-        <MudButton Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
+        <MudButton OnClick="@OpenAddPersonDialog" Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
+        <MudButton OnClick="@DeletePerson" Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
     </PagerContent>
 </MudDataGrid>
 
 @code
 {
-    private IEnumerable<PersonEntity> elements = new List<PersonEntity>
+    private List<PersonEntity> elements = new List<PersonEntity>
     {
         new PersonEntity { FirstName = "Test", LastName = "User", BirthDate = DateOnly.FromDateTime(DateTime.Parse("02.02.2022"))},
         new PersonEntity { FirstName = "Peter", LastName = "Lustig" },
@@ -96,6 +97,7 @@ Height="450px">
     private string searchString = string.Empty;
     private AddressEntity? selectedAddress;
     private TelephoneConnectionEntity? selectedConnection;
+    private PersonEntity? selectedPerson;
 
     private Func<PersonEntity, bool> QuickSearch => x =>
     {
@@ -135,17 +137,9 @@ Height="450px">
 
     private async Task OpenAddAddressDialog(PersonEntity person)
     {
-        var newAddress = new AddressEntity();
+        var result = await this.OpenDialog<AddressEntity, AddressDialog>("address");
 
-        var dialogParams = new DialogParameters { ["Address"] = newAddress };
-        var dialog = await this.dialogService.ShowAsync<AddressDialog>(
-            "Neue Adresse hinzufügen", 
-            dialogParams, 
-            this.GetDialogOptions());
-
-        var result = await dialog.Result;
-
-        if ((!result?.Canceled ?? false) && result?.Data is AddressEntity address)
+        if (result is { } address)
         {
             person.Addresses.Add(address);
         }
@@ -153,35 +147,51 @@ Height="450px">
 
     private async Task OpenAddTelephoneConnectionDialog(PersonEntity person)
     {
-        var newConnection = new TelephoneConnectionEntity();
+        var resultData = await this.OpenDialog<TelephoneConnectionEntity, TelephoneConnectionDialog>("connection");
 
-        var dialogParams = new DialogParameters { ["Connection"] = newConnection };
-        var dialog = await this.dialogService.ShowAsync<TelephoneConnectionDialog>(
-            "Neue Telefonverbindung hinzufügen", 
-            dialogParams, 
-            this.GetDialogOptions());
-
-        var result = await dialog.Result;
-
-        if ((!result?.Canceled ?? false) && result?.Data is TelephoneConnectionEntity connection)
+        if (resultData is { } connection)
         {
             person.TelephoneConnections.Add(connection);
         }
     }
 
+    private async Task OpenAddPersonDialog()
+    {
+        var resultData = await this.OpenDialog<PersonEntity, PersonDialog>("person");
+
+        if (resultData is { } person)
+        {
+            this.elements.Add(person);
+        }
+    }
+
+    private async Task<TEntity?> OpenDialog<TEntity, TDialogType>(
+        string propertyName, 
+        string? dialogTitle = null)
+        where TDialogType : IComponent
+        where TEntity : class, new()
+    {
+        var newEntity = new TEntity();
+
+        var dialogParams = new DialogParameters { [propertyName] = newEntity };
+        var dialog = await this.dialogService.ShowAsync<TDialogType>(
+            dialogTitle ?? $"Neue {typeof(TEntity).Name} hinzufügen",
+            dialogParams,
+            this.GetDialogOptions());
+
+        var result = await dialog.Result;
+
+        if ((result?.Canceled ?? false))
+        {
+            return null;
+        }
+
+        return (TEntity?)result?.Data;
+    }
+
     private DialogOptions GetDialogOptions()
     {
         return new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-    }
-
-    private void SelectedAddressChanged(AddressEntity? address)
-    {
-        this.selectedAddress = address;
-    }
-
-    private void SelectedConnetionChanged(TelephoneConnectionEntity? connection)
-    {
-        this.selectedConnection = connection;
     }
 
     private void DeleteAddress(PersonEntity person)
@@ -206,5 +216,28 @@ Height="450px">
         person.TelephoneConnections.Remove(this.selectedConnection);
 
         this.selectedConnection = null;
+    }
+
+    private void DeletePerson()
+    {
+        if (this.selectedPerson is null)
+        {
+            return;
+        }
+
+        if (this.selectedPerson.TelephoneConnections.Count > 0 || this.selectedPerson.Addresses.Count > 0)
+        {
+            this.snackbar.Add(
+                "Person konnte nicht gelöscht werden, da noch verknüpfte Telefonverbindungen oder Adressen existieren", 
+                Severity.Error);
+
+            return;
+        }
+
+        this.elements.Remove(this.selectedPerson);
+
+        this.snackbar.Add($"Person {this.selectedPerson} wurde erfolgreich gelöscht", Severity.Success);
+
+        this.selectedPerson = null;
     }
 }

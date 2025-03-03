@@ -2,11 +2,11 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="Address.Street" Label="Straße" Required="true" />
-        <MudTextField @bind-Value="Address.HouseNumber" Label="Hausnummer" Required="true" />
-        <MudTextField @bind-Value="Address.City" Label="Stadt" Required="true" />
-        <MudTextField @bind-Value="Address.ZipCode" Label="PLZ" Required="true" />
-        <MudTextField @bind-Value="Address.AdditionalInfo" Label="Zusatzinfo" />
+        <MudTextField @bind-Value="Person.FirstName" Label="Vorname" Required="true" />
+        <MudTextField @bind-Value="Person.LastName" Label="Nachname" Required="true" />
+        <MudDatePicker 
+            DateChanged="@(date => Person.BirthDate = date.HasValue ? DateOnly.FromDateTime(date.Value) : null)"
+                Label="Geburtsdatum" Mask="@(new DateMask("dd.MM.yyyy"))" DateFormat="dd.MM.yyyy" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="OnSave" Color="Color.Primary" Variant="Variant.Filled">Speichern</MudButton>
@@ -16,11 +16,11 @@
 
 @code {
     [CascadingParameter] public required IMudDialogInstance MudDialog { get; set; }
-    [Parameter] public required AddressEntity Address { get; set; }
+    [Parameter] public required PersonEntity Person { get; set; }
 
     private void OnSave()
     {
-        this.MudDialog.Close(DialogResult.Ok(Address));
+        this.MudDialog.Close(DialogResult.Ok(this.Person));
     }
 
     private void Cancel()

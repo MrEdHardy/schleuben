@@ -34,4 +34,10 @@ public sealed class PersonEntity
     /// Gets or sets the addresses associated with the person.
     /// </summary>
     public ICollection<AddressEntity> Addresses { get; set; } = [];
+
+    /// <inheritdoc/>
+    public override string? ToString()
+    {
+        return $"{this.FirstName} {this.LastName}";
+    }
 }

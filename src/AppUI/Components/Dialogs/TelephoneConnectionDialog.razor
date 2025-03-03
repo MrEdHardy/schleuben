@@ -16,11 +16,11 @@
 
     void OnSave()
     {
-        MudDialog.Close(DialogResult.Ok(this.Connection));
+        this.MudDialog.Close(DialogResult.Ok(this.Connection));
     }
 
     void Cancel()
     {
-        MudDialog.Cancel();
+        this.MudDialog.Cancel();
     }
 }
