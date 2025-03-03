@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
-using Shared.Infrastructure.Configuration;
-using Shared.Infrastructure.Configuration.OpenApi;
 using Timer = System.Timers.Timer;
 
-namespace MutableDataService.Services;
+namespace Shared.Infrastructure.Configuration.OpenApi;
 
 /// <summary>
 /// Default service for providing endpoints.
@@ -34,7 +32,7 @@ public sealed class DefaultEndpointProviderService(
 
             var timer = new Timer
             {
-                Interval = TimeSpan.FromMinutes(5).TotalMilliseconds,
+                Interval = TimeSpan.FromMinutes(1).TotalMilliseconds,
                 AutoReset = true,
             };
 
