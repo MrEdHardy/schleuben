@@ -25,6 +25,7 @@ public sealed class JsonSerializerOptionsProvider(IOptionsMonitor<JsonSettings> 
                 ReferenceHandlerType.Ignore => ReferenceHandler.IgnoreCycles,
                 _ => null,
             },
+            PropertyNameCaseInsensitive = true,
         };
     }
 }

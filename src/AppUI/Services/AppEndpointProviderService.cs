@@ -113,6 +113,8 @@ public class AppEndpointProviderService(
         const string readOnly = "ReadOnlyService";
         const string mutable = "MutableService";
 
+        this.endPoints.Clear();
+
         var readOnlyEndpoints = await this.FetchEndpoints(readOnly, cancellationToken);
         var mutableEndpoints = await this.FetchEndpoints(mutable, cancellationToken);
 

@@ -2,17 +2,17 @@
 
 @using Services;
 @using Shared.Infrastructure.Database.Entities;
+@using ViewModels;
 @using Components.Dialogs;
 
 @inject IDialogService dialogService;
 @inject ISnackbar snackbar;
-@inject CancellationTokenSource cts;
-@inject MinimalDataService dataService;
+@inject PersonViewModel model;
 
-<MudDataGrid T="PersonEntity" Items="@elements" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickSearch"
+<MudDataGrid T="PersonEntity" Items="@model.People" SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@QuickSearch"
 Hideable="true" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered ="true"
-Virtualize="true" FixedHeader="true" FixedFooter="true" SelectedItemChanged="@(person => this.selectedPerson = person)"
-Height="450px">
+Virtualize="true" FixedHeader="true" FixedFooter="true" MultiSelection="true" SelectedItemsChanged="@(person => this.model.SelectedPeople = person)"
+Height="450px" CommittedItemChanges="@model.UpdatePerson">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Personenverwaltung</MudText>
         <MudSpacer />
@@ -42,19 +42,20 @@ Height="450px">
                 <MudText Typo="Typo.h6">Adressen</MudText>
                 <MudDataGrid T="AddressEntity" Items="@person.Item.Addresses"
                 EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" EditTrigger="DataGridEditTrigger.OnRowClick"
-                Hideable="true" SortMode="SortMode.Multiple" SelectedItemChanged="@(address => this.selectedAddress = address)">
+                Hideable="true" SortMode="SortMode.Multiple" MultiSelection="true" SelectedItemsChanged="@(address => this.model.SelectedAddresses = address)"
+                CommittedItemChanges="@model.UpdateAddress">
                     <Columns>
                         <SelectColumn T="AddressEntity" />
                         <PropertyColumn Property="x => x.Street" Title="Straße" />
                         <PropertyColumn Property="x => x.HouseNumber" Title="Hausnummer" />
                         <PropertyColumn Property="x => x.City" Title="Stadt" />
                         <PropertyColumn Property="x => x.ZipCode" Title="PLZ" />
-                        <PropertyColumn Property="x => x.AdditionalInfo" Title="Zusatzinfo" />
+                        <PropertyColumn Property="x => x.AdditionalInfo" Required="false" Title="Zusatzinfo" />
                     </Columns>
                     <PagerContent>
                         <MudButton OnClick="@(() => OpenAddAddressDialog(person.Item))" 
                         Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
-                        <MudButton OnClick="@(() => DeleteAddress(person.Item))" 
+                        <MudButton OnClick="@(() => DeleteAddresses(person.Item))" 
                         Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
                     </PagerContent>
                 </MudDataGrid>
@@ -65,8 +66,9 @@ Height="450px">
             <EditTemplate Context="person">
                 <MudText Typo="Typo.h6">Telefonverbindungen</MudText>
                 <MudDataGrid T="TelephoneConnectionEntity" Items="@person.Item.TelephoneConnections" 
-                    EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" ReadOnly="false" Hideable="true" 
-                    SortMode="SortMode.Multiple" SelectedItemChanged="@(connection => this.selectedConnection = connection)">
+                EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" ReadOnly="false" Hideable="true" 
+                SortMode="SortMode.Multiple" MultiSelection="true" SelectedItemsChanged="@(connection => this.model.SelectedConnections = connection)"
+                CommittedItemChanges="@model.UpdateConnection">
                     <Columns>
                         <SelectColumn T="TelephoneConnectionEntity" />
                         <PropertyColumn Property="x => x.PhoneNumber" Title="Telefonnummer" />
@@ -74,7 +76,7 @@ Height="450px">
                     <PagerContent>
                         <MudButton OnClick="@(() => OpenAddTelephoneConnectionDialog(person.Item))" 
                         Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
-                        <MudButton OnClick="@(() => DeleteConnection(person.Item))" 
+                        <MudButton OnClick="@(() => DeleteConnections(person.Item))" 
                         Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
                     </PagerContent>
                 </MudDataGrid>
@@ -83,30 +85,19 @@ Height="450px">
     </Columns>
 
     <PagerContent>
-        <MudButton Color="Color.Info" Variant="Variant.Filled">Daten laden</MudButton>
+        <MudButton OnClick="@FillGrid" Color="Color.Info" Variant="Variant.Filled">Daten laden</MudButton>
         <MudButton OnClick="@OpenAddPersonDialog" Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
-        <MudButton OnClick="@DeletePerson" Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
+        <MudButton OnClick="@DeletePeople" Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
     </PagerContent>
 </MudDataGrid>
 
 @code
 {
-    private List<PersonEntity> elements = new List<PersonEntity>
-    {
-        // new PersonEntity { FirstName = "Test", LastName = "User", BirthDate = DateOnly.FromDateTime(DateTime.Parse("02.02.2022"))},
-        // new PersonEntity { FirstName = "Peter", LastName = "Lustig" },
-        // new PersonEntity { FirstName = "Verrückter", LastName = "Typ", BirthDate = DateOnly.FromDateTime(DateTime.Parse("01.01.2011")) },
-    };
 
     private string searchString = string.Empty;
-    private AddressEntity? selectedAddress;
-    private TelephoneConnectionEntity? selectedConnection;
-    private PersonEntity? selectedPerson;
-
-    protected override async Task OnInitializedAsync()
-    {
-        this.elements.AddRange(await this.dataService.GetAllPeople(this.cts.Token));
-    }
+    private HashSet<AddressEntity> selectedAddresses = [];
+    private HashSet<TelephoneConnectionEntity> selectedConnections = [];
+    private HashSet<PersonEntity> selectedPeople = [];
 
     private Func<PersonEntity, bool> QuickSearch => x =>
     {
@@ -125,7 +116,7 @@ Height="450px">
             return true;
         }
 
-        if ($"{x.FirstName} {x.LastName}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (x.ToString()?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false)
         {
             return true;
         }
@@ -143,6 +134,22 @@ Height="450px">
 
         return false;
     };
+
+    private async Task FillGrid()
+    {
+        try
+        {
+            await this.model.FetchPeople();
+        }
+        catch (Exception)
+        {
+            this.snackbar.Add("Fehler beim Abrufen der Personen!", Severity.Error);
+
+            return;
+        }
+
+        this.snackbar.Add("Personen erfolgreich geladen", Severity.Success);
+    }
 
     private async Task OpenAddAddressDialog(PersonEntity person)
     {
@@ -170,7 +177,16 @@ Height="450px">
 
         if (resultData is { } person)
         {
-            this.elements.Add(person);
+            try
+            {
+                await this.model.CreatePerson(person);  
+            }
+            catch (Exception)
+            {
+                this.snackbar.Add("Fehler beim Anlegen der neuen Person!", Severity.Error);
+
+                return;
+            }
         }
     }
 
@@ -203,50 +219,54 @@ Height="450px">
         return new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
     }
 
-    private void DeleteAddress(PersonEntity person)
+    private async Task DeleteAddresses(PersonEntity person)
     {
-        if (this.selectedAddress is null)
+        var errors = await this.model.DeleteAddresses(person);
+
+        if (errors.Count > 0)
         {
+            foreach (var error in errors)
+            {
+                this.snackbar.Add($"Fehler beim Löschen von Adresse {error}!", Severity.Error);
+            }
+
             return;
         }
 
-        person.Addresses.Remove(this.selectedAddress);
-
-        this.selectedAddress = null;
+        this.snackbar.Add("Löschen von Adressen erfolgreich", Severity.Success);
     }
 
-    private void DeleteConnection(PersonEntity person)
+    private async Task DeleteConnections(PersonEntity person)
     {
-        if (this.selectedConnection is null)
+        var errors = await this.model.DeleteConnections(person);
+
+        if (errors.Count > 0)
         {
+            foreach (var error in errors)
+            {
+                this.snackbar.Add($"Fehler beim Löschen von Telefonverbindung {error}!", Severity.Error);
+            }
+
             return;
         }
 
-        person.TelephoneConnections.Remove(this.selectedConnection);
-
-        this.selectedConnection = null;
+        this.snackbar.Add("Löschen von Telefonverbindungen erfolgreich", Severity.Success);
     }
 
-    private void DeletePerson()
+    private async Task DeletePeople()
     {
-        if (this.selectedPerson is null)
+        var errors = await this.model.DeletePeople();
+
+        if (errors.Count > 0)
         {
+            foreach (var error in errors)
+            {
+                this.snackbar.Add($"Person {error} konnte nicht gelöscht werden", Severity.Error);
+            }
+
             return;
         }
 
-        if (this.selectedPerson.TelephoneConnections.Count > 0 || this.selectedPerson.Addresses.Count > 0)
-        {
-            this.snackbar.Add(
-                "Person konnte nicht gelöscht werden, da noch verknüpfte Telefonverbindungen oder Adressen existieren", 
-                Severity.Error);
-
-            return;
-        }
-
-        this.elements.Remove(this.selectedPerson);
-
-        this.snackbar.Add($"Person {this.selectedPerson} wurde erfolgreich gelöscht", Severity.Success);
-
-        this.selectedPerson = null;
+        this.snackbar.Add($"Personen wurden erfolgreich gelöscht", Severity.Success);
     }
 }

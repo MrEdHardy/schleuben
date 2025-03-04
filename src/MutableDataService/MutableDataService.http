@@ -8,7 +8,13 @@ Content-Type: application/json
 
 {
     "FirstName": "Lustig",
-    "LastName": "Petra"
+    "LastName": "Petra",
+    "TelephoneConnections":
+    [
+        {
+            "PhoneNumber": "12121212112"
+        }
+    ]
 }
 
 ### Update Person

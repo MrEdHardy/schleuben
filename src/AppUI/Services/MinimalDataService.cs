@@ -53,9 +53,53 @@ public sealed class MinimalDataService(
 
         ArgumentNullException.ThrowIfNull(uri);
 
-        string formattedUriString = Smart.Format(uri!.ToString(), new { id });
+        string formattedUriString = Smart.Format(uri.ToString(), new { id });
 
-        var response = await client.DeleteAsync(uri, cancellationToken);
+        var response = await client.DeleteAsync(formattedUriString, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteConnection(uint id, CancellationToken cancellationToken)
+    {
+        using var client = this.GetHttpClient();
+
+        var uri = await endpointProvider.GetEndpoint("connections/delete", cancellationToken, "MutableService");
+
+        string formattedString = Smart.Format(uri?.ToString() ?? string.Empty, new { id });
+
+        var response = await client.DeleteAsync(formattedString, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteAddress(uint id, CancellationToken cancellationToken)
+    {
+        using var client = this.GetHttpClient();
+
+        var uri = await endpointProvider.GetEndpoint("addresses/delete", cancellationToken, "MutableService");
+
+        string formattedString = Smart.Format(uri?.ToString() ?? string.Empty, new { id });
+
+        var response = await client.DeleteAsync(formattedString, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateAddress(AddressEntity address, CancellationToken cancellationToken)
+    {
+        using var client = this.GetHttpClient();
+
+        var uri = await endpointProvider.GetEndpoint("addresses/update", cancellationToken, "MutableService");
+
+        var response = await client.PatchAsJsonAsync(uri, address, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateConnection(TelephoneConnectionEntity connection, CancellationToken cancellationToken)
+    {
+        using var client = this.GetHttpClient();
+
+        var uri = await endpointProvider.GetEndpoint("connections/update", cancellationToken, "MutableService");
+
+        var response = await client.PatchAsJsonAsync(uri, connection, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 

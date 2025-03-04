@@ -1,6 +1,7 @@
 using AppUI.Components;
 using AppUI.Configuration;
 using AppUI.Services;
+using AppUI.ViewModels;
 using MudBlazor.Services;
 using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Extensions;
@@ -34,6 +35,9 @@ public class Program
 
         // Add data service
         builder.Services.AddTransient<MinimalDataService>();
+
+        // Add viewmodel
+        builder.Services.AddTransient<PersonViewModel>();
 
         // Add cancellation token source
         var tokenSource = new CancellationTokenSource();

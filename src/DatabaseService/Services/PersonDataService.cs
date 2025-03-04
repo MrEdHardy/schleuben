@@ -52,6 +52,7 @@ public sealed class PersonDataService(DatabaseContext dbContext) : IPersonDataSe
             .FirstOrDefaultAsync(p => p.Id == person.Id, cancellationToken);
 
         await dbContext.UpdateEntity(person, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private IQueryable<PersonEntity> GetBasePersonQuery()
