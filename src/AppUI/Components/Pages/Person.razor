@@ -69,7 +69,7 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
                 <MudDataGrid T="TelephoneConnectionEntity" Items="@person.Item.TelephoneConnections" 
                 EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" ReadOnly="false" Hideable="true" 
                 SortMode="SortMode.Multiple" MultiSelection="true" SelectedItemsChanged="@(connection => this.model.SelectedConnections = connection)"
-                CommittedItemChanges="@model.UpdateConnection" Virtualize="true" FixedFooter="true" Spellcheck="true">
+                CommittedItemChanges="@model.UpdateConnection" Virtualize="true" FixedFooter="true">
                     <Columns>
                         <SelectColumn T="TelephoneConnectionEntity" />
                         <PropertyColumn Property="x => x.PhoneNumber" Title="Telefonnummer" />
