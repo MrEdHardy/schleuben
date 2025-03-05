@@ -1,4 +1,4 @@
-﻿@page "/person"
+﻿@page "/"
 
 @using Services;
 @using Shared.Infrastructure.Database.Entities;
@@ -39,11 +39,11 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
 
         <TemplateColumn Title="Adressen" Hidden="true" Editable="true">
             <EditTemplate Context="person">
-                <MudText Typo="Typo.h6">Adressen</MudText>
+                <MudText Typo="Typo.h6" Style="margin:25px 10px;">Adressen</MudText>
                 <MudDataGrid T="AddressEntity" Items="@person.Item.Addresses"
                 EditMode="DataGridEditMode.Form" Bordered="true" ReadOnly="false" EditTrigger="DataGridEditTrigger.OnRowClick"
                 Hideable="true" SortMode="SortMode.Multiple" MultiSelection="true" SelectedItemsChanged="@(address => this.model.SelectedAddresses = address)"
-                CommittedItemChanges="@model.UpdateAddress">
+                CommittedItemChanges="@model.UpdateAddress" Virtualize="true" FixedFooter="true">
                     <Columns>
                         <SelectColumn T="AddressEntity" />
                         <PropertyColumn Property="x => x.Street" Title="Straße" />
@@ -53,6 +53,7 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
                         <PropertyColumn Property="x => x.AdditionalInfo" Required="false" Title="Zusatzinfo" />
                     </Columns>
                     <PagerContent>
+                        <br style="margin: 10px 2px;" />
                         <MudButton OnClick="@(() => OpenAddAddressDialog(person.Item))" 
                         Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
                         <MudButton OnClick="@(() => DeleteAddresses(person.Item))" 
@@ -64,16 +65,17 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
 
         <TemplateColumn Title="Telefonverbindungen" Hidden="true" Editable="true">
             <EditTemplate Context="person">
-                <MudText Typo="Typo.h6">Telefonverbindungen</MudText>
+                <MudText Typo="Typo.h6" Style="margin:25px 10px;">Telefonverbindungen</MudText>
                 <MudDataGrid T="TelephoneConnectionEntity" Items="@person.Item.TelephoneConnections" 
                 EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" ReadOnly="false" Hideable="true" 
                 SortMode="SortMode.Multiple" MultiSelection="true" SelectedItemsChanged="@(connection => this.model.SelectedConnections = connection)"
-                CommittedItemChanges="@model.UpdateConnection">
+                CommittedItemChanges="@model.UpdateConnection" Virtualize="true" FixedFooter="true" Spellcheck="true">
                     <Columns>
                         <SelectColumn T="TelephoneConnectionEntity" />
                         <PropertyColumn Property="x => x.PhoneNumber" Title="Telefonnummer" />
                     </Columns>
                     <PagerContent>
+                        <br style="margin: 10px 2px;" />
                         <MudButton OnClick="@(() => OpenAddTelephoneConnectionDialog(person.Item))" 
                         Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
                         <MudButton OnClick="@(() => DeleteConnections(person.Item))" 
@@ -86,8 +88,8 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
 
     <PagerContent>
         <MudButton OnClick="@FillGrid" Color="Color.Info" Variant="Variant.Filled">Daten laden</MudButton>
-        <MudButton OnClick="@OpenAddPersonDialog" Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
-        <MudButton OnClick="@DeletePeople" Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
+        <MudButton OnClick="@OpenAddPersonDialog" Disabled="@buttonsDisabled" Color="Color.Primary" Variant="Variant.Filled">Hinzufügen</MudButton>
+        <MudButton OnClick="@DeletePeople" Disabled="@buttonsDisabled" Color="Color.Error" Variant="Variant.Filled">Löschen</MudButton>
     </PagerContent>
 </MudDataGrid>
 
@@ -98,6 +100,7 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
     private HashSet<AddressEntity> selectedAddresses = [];
     private HashSet<TelephoneConnectionEntity> selectedConnections = [];
     private HashSet<PersonEntity> selectedPeople = [];
+    private bool buttonsDisabled = true;
 
     private Func<PersonEntity, bool> QuickSearch => x =>
     {
@@ -148,6 +151,7 @@ Height="450px" CommittedItemChanges="@model.UpdatePerson">
             return;
         }
 
+        this.buttonsDisabled = false;
         this.snackbar.Add("Personen erfolgreich geladen", Severity.Success);
     }
 

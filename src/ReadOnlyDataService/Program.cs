@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Options;
 using ReadOnlyDataService.Configuration;
 using ReadOnlyDataService.Services;
-using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.Json;
 using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Configuration.Resilience;
@@ -58,11 +56,8 @@ public class Program
         builder.Services.AddLogging();
 
         // Add options and provider
-        builder.Services.Configure<ReadOnlyDataServiceOptions>(
+        builder.Services.RegisterAddressSettings<ReadOnlyDataServiceOptions>(
             builder.Configuration.GetSection("ReadOnlyDataService"));
-
-        builder.Services.AddSingleton<IOptionsMonitor<IAddressSettings>>(provider => provider
-            .GetRequiredService<IOptionsMonitor<ReadOnlyDataServiceOptions>>());
 
         // Add resiliency
         builder.Services.Configure<ResilienceSettings>(builder.Configuration.GetSection("ResilienceSettings"));
@@ -98,6 +93,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        await app.Services.ExecuteInitializeEndpointDiscovery(tokenSource.Token);
 
         await app.RunAsync(tokenSource.Token);
     }

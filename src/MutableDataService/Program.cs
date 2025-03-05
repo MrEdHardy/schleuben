@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Options;
 using MutableDataService.Configuration;
 using MutableDataService.Services;
-using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.Json;
 using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Configuration.Resilience;
@@ -53,11 +51,8 @@ public class Program
             });
 
         // Add options
-        builder.Services.Configure<MutableDataServiceOptions>(
+        builder.Services.RegisterAddressSettings<MutableDataServiceOptions>(
             builder.Configuration.GetSection("MutableDataService"));
-
-        builder.Services.AddSingleton<IOptionsMonitor<IAddressSettings>>(provider => provider
-            .GetRequiredService<IOptionsMonitor<MutableDataServiceOptions>>());
 
         builder.Services.Configure<ResilienceSettings>(
             builder.Configuration.GetSection("ResilienceSettings"));
@@ -95,6 +90,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        await app.Services.ExecuteInitializeEndpointDiscovery(tokenSource.Token);
 
         await app.RunAsync(tokenSource.Token);
     }

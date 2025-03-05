@@ -68,8 +68,7 @@ public class Program
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
 
-        var endpointProvider = app.Services.GetRequiredService<IEndpointProviderService>();
-        await endpointProvider.InitializeEndpoints(tokenSource.Token);
+        await app.Services.ExecuteInitializeEndpointDiscovery(tokenSource.Token);
 
         await app.RunAsync(tokenSource.Token);
     }

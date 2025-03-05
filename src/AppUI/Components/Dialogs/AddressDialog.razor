@@ -1,5 +1,7 @@
 ﻿@using Shared.Infrastructure.Database.Entities;
 
+@inject ISnackbar snackbar;
+
 <MudDialog>
     <DialogContent>
         <MudTextField @bind-Value="Address.Street" Label="Straße" Required="true" />
@@ -20,6 +22,16 @@
 
     private void OnSave()
     {
+        if (string.IsNullOrWhiteSpace(this.Address.Street) 
+            || string.IsNullOrWhiteSpace(this.Address.HouseNumber)
+            || string.IsNullOrWhiteSpace(this.Address.City)
+            || string.IsNullOrWhiteSpace(this.Address.ZipCode))
+        {
+            this.snackbar.Add("Erforderliche Felder ausfüllen!", Severity.Warning);
+
+            return;
+        }
+
         this.MudDialog.Close(DialogResult.Ok(Address));
     }
 

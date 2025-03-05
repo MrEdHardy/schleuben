@@ -1,5 +1,7 @@
 ﻿@using Shared.Infrastructure.Database.Entities;
 
+@inject ISnackbar snackbar;
+
 <MudDialog>
     <DialogContent>
         <MudTextField @bind-Value="Connection.PhoneNumber" Label="Telefonnummer" Required="true" />
@@ -16,6 +18,13 @@
 
     void OnSave()
     {
+        if (string.IsNullOrWhiteSpace(this.Connection.PhoneNumber))
+        {
+            this.snackbar.Add("Erforderliche Felder ausfüllen!", Severity.Warning);
+
+            return;
+        }
+
         this.MudDialog.Close(DialogResult.Ok(this.Connection));
     }
 

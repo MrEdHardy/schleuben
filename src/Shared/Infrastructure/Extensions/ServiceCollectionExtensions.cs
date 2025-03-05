@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
 using Polly;
+using Shared.Infrastructure.Configuration;
 using Shared.Infrastructure.Configuration.Json;
+using Shared.Infrastructure.Configuration.OpenApi;
 using Shared.Infrastructure.Configuration.Resilience;
 using System.Threading.RateLimiting;
 
@@ -70,6 +73,38 @@ public static class ServiceCollectionExtensions
         });
 
         return builder;
+    }
+
+    /// <summary>
+    /// Register instance of <see cref="IAddressSettings"/>
+    /// </summary>
+    /// <typeparam name="TSettings"><see cref="IAddressSettings"/> type</typeparam>
+    /// <param name="services">Service collection</param>
+    /// <param name="section">Configuration section containing the <see cref="IAddressSettings"/></param>
+    public static void RegisterAddressSettings<TSettings>(
+        this IServiceCollection services,
+        IConfigurationSection section)
+        where TSettings : class, IAddressSettings
+    {
+        services.Configure<TSettings>(section);
+
+        services.AddSingleton<IOptionsMonitor<IAddressSettings>>(provider => provider
+            .GetRequiredService<IOptionsMonitor<TSettings>>());
+    }
+
+    /// <summary>
+    /// Initializes the initial endpoint discovery
+    /// </summary>
+    /// <param name="services">Service provider</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
+    public static async Task ExecuteInitializeEndpointDiscovery(
+        this IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+        var endpointService = services.GetRequiredService<IEndpointProviderService>();
+
+        await endpointService.InitializeEndpoints(cancellationToken);
     }
 
     private static void AddSchleubenResilienceHandler(
